@@ -3,6 +3,155 @@ let opportunities = [];
 let map;
 let unfLocation = { lat: 30.2672, lng: -81.5114 }; // University of North Florida coordinates
 
+// Check for resume filters from the resume analyzer
+function checkResumeFilters() {
+    const filters = localStorage.getItem('resumeFilters');
+    const analysis = localStorage.getItem('resumeAnalysis');
+    
+    console.log('Raw filters from localStorage:', filters);
+    console.log('Raw analysis from localStorage:', analysis);
+    
+    if (filters || analysis) {
+        try {
+            const filterData = filters ? JSON.parse(filters) : null;
+            const analysisData = analysis ? JSON.parse(analysis) : null;
+            
+            console.log('Parsed filter data:', filterData);
+            console.log('Parsed analysis data:', analysisData);
+            
+            // Show a notification that filters are applied
+            if (filterData || analysisData) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    animation: slideIn 0.5s ease;
+                `;
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-filter"></i>
+                        <div>
+                            <strong>Resume Filters Applied</strong>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">Showing opportunities matched to your resume</div>
+                        </div>
+                        <button onclick="clearResumeFilters()" style="
+                            background: white;
+                            color: #667eea;
+                            border: none;
+                            padding: 5px 10px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            margin-left: 20px;
+                        ">Clear</button>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                
+                // Auto-apply filters after page is fully loaded
+                setTimeout(() => {
+                    applyResumeFilters(filterData || analysisData);
+                }, 2000);
+            }
+        } catch (e) {
+            console.error('Error parsing resume filters:', e);
+        }
+    }
+}
+
+// Clear resume filters
+function clearResumeFilters() {
+    localStorage.removeItem('resumeFilters');
+    localStorage.removeItem('resumeAnalysis');
+    location.reload();
+}
+
+// Apply resume filters to opportunities
+function applyResumeFilters(filterData) {
+    console.log('Applying resume filters:', filterData);
+    let filtersApplied = false;
+    
+    if (filterData.jobTypes) {
+        // Apply job type filters
+        filterData.jobTypes.forEach(type => {
+            const checkbox = document.querySelector(`.type-filter-checkbox[value="${type}"]`);
+            console.log(`Looking for job type: ${type}`, checkbox);
+            if (checkbox) {
+                checkbox.checked = true;
+                filtersApplied = true;
+            }
+        });
+    }
+    
+    if (filterData.fields) {
+        // Apply major/field filters
+        filterData.fields.forEach(field => {
+            const checkbox = document.querySelector(`.major-filter-checkbox[value="${field}"]`);
+            console.log(`Looking for field: ${field}`, checkbox);
+            if (checkbox) {
+                checkbox.checked = true;
+                filtersApplied = true;
+            }
+        });
+    }
+    
+    // Also try skills-based filtering by checking if skills match any major categories
+    if (filterData.skills) {
+        const skillsLower = filterData.skills.map(s => s.toLowerCase());
+        
+        // Check for tech skills
+        const techSkills = ['javascript', 'python', 'java', 'react', 'node', 'sql', 'aws', 'html', 'css', 'git'];
+        if (skillsLower.some(skill => techSkills.some(tech => skill.includes(tech)))) {
+            const csCheckbox = document.querySelector(`.major-filter-checkbox[value="computer-science"]`);
+            if (csCheckbox) {
+                csCheckbox.checked = true;
+                filtersApplied = true;
+            }
+        }
+        
+        // Check for business skills
+        const businessSkills = ['marketing', 'finance', 'accounting', 'management', 'business'];
+        if (skillsLower.some(skill => businessSkills.some(biz => skill.includes(biz)))) {
+            const bizCheckboxes = document.querySelectorAll(`.major-filter-checkbox[value*="business"], .major-filter-checkbox[value="marketing"], .major-filter-checkbox[value="finance"], .major-filter-checkbox[value="accounting"], .major-filter-checkbox[value="management"]`);
+            bizCheckboxes.forEach(cb => {
+                cb.checked = true;
+                filtersApplied = true;
+            });
+        }
+    }
+    
+    console.log('Filters applied:', filtersApplied);
+    
+    if (filtersApplied) {
+        // Expand major groups first
+        const majorGroups = document.querySelectorAll('.major-group');
+        majorGroups.forEach(group => {
+            const content = group.querySelector('.major-group-content');
+            const hasChecked = group.querySelector('.major-filter-checkbox:checked');
+            if (hasChecked && content) {
+                content.style.display = 'block';
+            }
+        });
+        
+        // Wait a bit then trigger filter application
+        setTimeout(() => {
+            const applyBtn = document.getElementById('apply-filters-btn');
+            console.log('Apply button:', applyBtn);
+            if (applyBtn) {
+                applyBtn.click();
+            }
+        }, 1000);
+    } else {
+        console.log('No filters were applied - check field names match');
+    }
+}
+
 // Use the comprehensive opportunities from the external data file
 // This will be loaded from opportunities-data.js which contains thousands of opportunities
 const enhancedOpportunities = window.opportunitiesData || [
@@ -1084,8 +1233,14 @@ function setupEventListeners() {
     // Navigation smooth scrolling
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
             const targetId = this.getAttribute('href');
+            
+            // Don't prevent default for external links
+            if (!targetId.startsWith('#')) {
+                return; // Let the browser handle external links normally
+            }
+            
+            e.preventDefault();
             trackButtonClick('navigation', this.textContent, targetId, 'navigation');
             const targetSection = document.querySelector(targetId);
             if (targetSection) {
@@ -2718,3 +2873,8 @@ window.gm_authFailure = function() {
         }
     });
 };
+
+// Initialize page and check for resume filters
+document.addEventListener('DOMContentLoaded', function() {
+    checkResumeFilters();
+});
