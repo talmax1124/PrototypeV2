@@ -569,8 +569,29 @@
 
         // State management
         let uploadedFile = null;
-        let apiKey = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+        let apiKey = '';
         let analysisResults = null;
+
+        // Fetch API key from server
+        async function fetchApiKey() {
+            try {
+                const response = await fetch('/api/openai-key');
+                const data = await response.json();
+                
+                if (data.success) {
+                    apiKey = data.apiKey;
+                    console.log('API key loaded from server');
+                    updateAnalyzeButton();
+                    return true;
+                } else {
+                    throw new Error(data.error || 'Failed to get API key');
+                }
+            } catch (error) {
+                console.error('Error fetching API key:', error);
+                showError('Failed to load API key from server. Make sure the server is running.');
+                return false;
+            }
+        }
 
         // Elements
         const uploadArea = document.getElementById('upload-area');
@@ -589,7 +610,7 @@
         const loading = document.getElementById('loading');
         const resultsContent = document.getElementById('results-content');
 
-        // API key is hardcoded, no need to initialize or save
+        // API key is loaded from server via fetchApiKey()
 
         // Drag and drop handlers
         uploadArea.addEventListener('dragover', (e) => {
@@ -1057,7 +1078,10 @@
         }
 
         // Initialize
-        updateAnalyzeButton();
+        document.addEventListener('DOMContentLoaded', async function() {
+            await fetchApiKey();
+            updateAnalyzeButton();
+        });
     </script>
 </body>
 </html>

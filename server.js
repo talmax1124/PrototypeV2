@@ -413,6 +413,31 @@ app.get('/api/analytics', async (req, res) => {
     }
 });
 
+// OpenAI API Key endpoint for resume analyzer
+app.get('/api/openai-key', (req, res) => {
+    try {
+        const apiKey = process.env.OPENAI_API_KEY;
+        
+        if (!apiKey) {
+            return res.status(500).json({ 
+                success: false, 
+                error: 'OpenAI API key not configured' 
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            apiKey: apiKey 
+        });
+    } catch (error) {
+        console.error('Error serving API key:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to retrieve API key' 
+        });
+    }
+});
+
 // Catch-all handler: send back index.html for any non-API routes
 app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
