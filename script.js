@@ -970,11 +970,11 @@ function setupEventListeners() {
         });
     }
     
-    // Search functionality
+    // Enhanced Search functionality
     if (searchBtn) {
         searchBtn.addEventListener('click', function() {
             trackButtonClick('search', 'Search Button', searchInput.value, 'search');
-            performSearch();
+            performEnhancedSearch();
         });
     }
     
@@ -982,47 +982,81 @@ function setupEventListeners() {
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 trackButtonClick('search', 'Search Enter Key', searchInput.value, 'search');
-                performSearch();
+                performEnhancedSearch();
+            }
+        });
+        
+        // Add search suggestions
+        searchInput.addEventListener('input', debounce(function() {
+            showSearchSuggestions(this.value);
+        }, 300));
+        
+        searchInput.addEventListener('focus', function() {
+            if (this.value) showSearchSuggestions(this.value);
+        });
+        
+        // Hide suggestions on click outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-input-group')) {
+                const suggestionsDiv = document.getElementById('search-suggestions');
+                if (suggestionsDiv) suggestionsDiv.style.display = 'none';
             }
         });
     }
     
-    // Filter functionality
-    if (locationFilter) {
-        locationFilter.addEventListener('change', function() {
-            trackButtonClick('filter', 'Location Filter', this.value, 'filters');
-            applyFilters();
-        });
+    // Inline search filters
+    const searchLocation = document.getElementById('search-location');
+    const searchType = document.getElementById('search-type');
+    if (searchLocation) {
+        searchLocation.addEventListener('change', performEnhancedSearch);
+    }
+    if (searchType) {
+        searchType.addEventListener('change', performEnhancedSearch);
     }
     
-    if (typeFilter) {
-        typeFilter.addEventListener('change', function() {
-            trackButtonClick('filter', 'Type Filter', this.value, 'filters');
-            applyFilters();
-        });
-    }
-    
-    if (majorFilter) {
-        majorFilter.addEventListener('change', function() {
-            trackButtonClick('filter', 'Major Filter', this.value, 'filters');
-            applyFilters();
-        });
-    }
-    
-    if (distanceFilter) {
-        distanceFilter.addEventListener('change', function() {
-            trackButtonClick('filter', 'Distance Filter', this.value, 'filters');
-            applyFilters();
-        });
-    }
-    
-    // Quick filter buttons
-    quickFilterBtns.forEach(btn => {
+    // Quick filter buttons in hero
+    document.querySelectorAll('.quick-filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            trackButtonClick('quick-filter', this.textContent, this.dataset.type, 'quick-filters');
-            toggleQuickFilter(this);
+            // Remove active class from all buttons
+            document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            
+            // Clear search input
+            searchInput.value = '';
+            
+            // Apply the filter
+            if (filter === 'internship' || filter === 'entry-level') {
+                // Filter by job type
+                const filtered = opportunities.filter(opp => opp.type === filter);
+                displayOpportunityCards(filtered);
+            } else if (filter === 'near-unf') {
+                // Filter by distance from UNF
+                const filtered = opportunities.filter(opp => opp.distanceFromUNF <= 10);
+                displayOpportunityCards(filtered);
+            } else if (filter === 'remote') {
+                // Filter by remote work
+                const filtered = opportunities.filter(opp => 
+                    opp.workEnvironment && opp.workEnvironment.toLowerCase().includes('remote'));
+                displayOpportunityCards(filtered);
+            }
         });
     });
+    
+    // Setup enhanced filters
+    setupEnhancedFilters();
+    
+    // Legacy quick filter buttons (if they exist)
+    if (quickFilterBtns && quickFilterBtns.length > 0) {
+        quickFilterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                trackButtonClick('quick-filter', this.textContent, this.dataset.type, 'quick-filters');
+                toggleQuickFilter(this);
+            });
+        });
+    }
     
     // View toggle buttons
     if (cardViewBtn) {
@@ -1730,29 +1764,263 @@ function initMaps() {
     }
 }
 
-// Search and filter functions
+// Enhanced Search and filter functions
+function performEnhancedSearch() {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const searchLocation = document.getElementById('search-location')?.value || '';
+    const searchType = document.getElementById('search-type')?.value || '';
+    
+    let filtered = opportunities;
+    
+    // Text search
+    if (query) {
+        filtered = filtered.filter(opp => 
+            opp.title.toLowerCase().includes(query) ||
+            opp.company.toLowerCase().includes(query) ||
+            opp.description.toLowerCase().includes(query) ||
+            (opp.detailedDescription && opp.detailedDescription.toLowerCase().includes(query)) ||
+            opp.tags.some(tag => tag.toLowerCase().includes(query)) ||
+            opp.location.toLowerCase().includes(query) ||
+            opp.requirements.some(req => req.toLowerCase().includes(query)) ||
+            opp.benefits.some(benefit => benefit.toLowerCase().includes(query))
+        );
+    }
+    
+    // Location filter from search
+    if (searchLocation) {
+        filtered = applyLocationFilter(filtered, searchLocation);
+    }
+    
+    // Type filter from search
+    if (searchType) {
+        filtered = filtered.filter(opp => opp.type === searchType);
+    }
+    
+    displayOpportunityCards(filtered);
+}
+
+// Legacy function for compatibility
 function performSearch() {
-    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    if (searchTerm === '') {
-        displayOpportunityCards(opportunities);
+    performEnhancedSearch();
+}
+
+// Search suggestions
+function showSearchSuggestions(query) {
+    const suggestionsDiv = document.getElementById('search-suggestions');
+    if (!suggestionsDiv) return;
+    
+    if (!query) {
+        suggestionsDiv.style.display = 'none';
         return;
     }
     
-    const filteredOpportunities = opportunities.filter(opp => 
-        opp.title.toLowerCase().includes(searchTerm) ||
-        opp.company.toLowerCase().includes(searchTerm) ||
-        opp.description.toLowerCase().includes(searchTerm) ||
-        (opp.detailedDescription && opp.detailedDescription.toLowerCase().includes(searchTerm)) ||
-        opp.tags.some(tag => tag.toLowerCase().includes(searchTerm)) ||
-        opp.location.toLowerCase().includes(searchTerm) ||
-        opp.requirements.some(req => req.toLowerCase().includes(searchTerm)) ||
-        opp.benefits.some(benefit => benefit.toLowerCase().includes(searchTerm))
-    );
+    // Get unique job titles, companies, and tags
+    const suggestions = new Set();
     
-    displayOpportunityCards(filteredOpportunities);
+    opportunities.forEach(opp => {
+        if (opp.title.toLowerCase().includes(query.toLowerCase())) {
+            suggestions.add(opp.title);
+        }
+        if (opp.company.toLowerCase().includes(query.toLowerCase())) {
+            suggestions.add(opp.company);
+        }
+        if (opp.tags) {
+            opp.tags.forEach(tag => {
+                if (tag.toLowerCase().includes(query.toLowerCase())) {
+                    suggestions.add(tag);
+                }
+            });
+        }
+    });
+    
+    const suggestionArray = Array.from(suggestions).slice(0, 8);
+    
+    if (suggestionArray.length > 0) {
+        suggestionsDiv.innerHTML = suggestionArray.map(s => 
+            `<div class="search-suggestion-item" onclick="selectSuggestion('${s.replace(/'/g, "\\'")}')">\n                <i class="fas fa-search"></i> ${s}\n            </div>`
+        ).join('');
+        suggestionsDiv.style.display = 'block';
+    } else {
+        suggestionsDiv.style.display = 'none';
+    }
+}
+
+function selectSuggestion(value) {
+    searchInput.value = value;
+    document.getElementById('search-suggestions').style.display = 'none';
+    performEnhancedSearch();
+}
+
+// Debounce helper
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function applyLocationFilter(filtered, location) {
+    if (location === 'near-unf') {
+        return filtered.filter(opp => opp.distanceFromUNF <= 10);
+    } else if (location === 'jacksonville') {
+        return filtered.filter(opp => opp.location.includes('Jacksonville'));
+    } else if (location === 'florida') {
+        return filtered.filter(opp => opp.location.includes('FL'));
+    } else if (location === 'remote') {
+        return filtered.filter(opp => 
+            opp.workEnvironment && opp.workEnvironment.toLowerCase().includes('remote'));
+    } else if (location === 'hybrid') {
+        return filtered.filter(opp => 
+            opp.workEnvironment && opp.workEnvironment.toLowerCase().includes('hybrid'));
+    }
+    return filtered;
 }
 
 function applyFilters() {
+    applyEnhancedFilters();
+}
+
+// Enhanced filter setup
+function setupEnhancedFilters() {
+    // Distance slider
+    const distanceSlider = document.getElementById('distance-filter');
+    const distanceValue = document.getElementById('distance-value');
+    
+    if (distanceSlider) {
+        distanceSlider.addEventListener('input', function() {
+            const value = this.value;
+            if (distanceValue) {
+                distanceValue.textContent = value === '0' ? 'Any' : `${value} miles`;
+            }
+            this.style.setProperty('--value', `${(value / 50) * 100}%`);
+        });
+    }
+    
+    // Major accordion
+    document.querySelectorAll('.major-group-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const group = this.parentElement;
+            group.classList.toggle('active');
+        });
+    });
+    
+    // Apply filters button
+    const applyFiltersBtn = document.getElementById('apply-filters-btn');
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyEnhancedFilters);
+    }
+    
+    // Clear filters button
+    const clearFiltersBtn = document.getElementById('clear-filters');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearAllFilters);
+    }
+    
+    // Individual filter listeners
+    document.getElementById('location-filter')?.addEventListener('change', updateActiveFilters);
+    document.getElementById('salary-filter')?.addEventListener('change', updateActiveFilters);
+    document.getElementById('company-size-filter')?.addEventListener('change', updateActiveFilters);
+    document.getElementById('posted-filter')?.addEventListener('change', updateActiveFilters);
+    
+    document.querySelectorAll('.type-filter-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateActiveFilters);
+    });
+    
+    document.querySelectorAll('.major-filter-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateActiveFilters);
+    });
+}
+
+function updateActiveFilters() {
+    const activeFiltersDiv = document.getElementById('active-filters');
+    if (!activeFiltersDiv) return;
+    
+    const activeFilters = [];
+    
+    // Check all filters and collect active ones
+    const location = document.getElementById('location-filter')?.value;
+    if (location) activeFilters.push({ type: 'Location', value: location });
+    
+    const distance = document.getElementById('distance-filter')?.value;
+    if (distance && distance !== '0') activeFilters.push({ type: 'Distance', value: `${distance} miles` });
+    
+    const selectedTypes = Array.from(document.querySelectorAll('.type-filter-checkbox:checked'));
+    selectedTypes.forEach(cb => activeFilters.push({ type: 'Type', value: cb.parentElement.textContent.trim() }));
+    
+    const selectedMajors = Array.from(document.querySelectorAll('.major-filter-checkbox:checked'));
+    selectedMajors.forEach(cb => activeFilters.push({ type: 'Major', value: cb.parentElement.textContent.trim() }));
+    
+    const salary = document.getElementById('salary-filter')?.value;
+    if (salary) activeFilters.push({ type: 'Salary', value: salary });
+    
+    const companySize = document.getElementById('company-size-filter')?.value;
+    if (companySize) activeFilters.push({ type: 'Company Size', value: companySize });
+    
+    const posted = document.getElementById('posted-filter')?.value;
+    if (posted) activeFilters.push({ type: 'Posted', value: posted });
+    
+    // Display active filters
+    if (activeFilters.length > 0) {
+        activeFiltersDiv.innerHTML = activeFilters.map(filter => 
+            `<span class="active-filter-tag">\n                ${filter.type}: ${filter.value}\n                <button onclick="removeFilter('${filter.type}', '${filter.value}')">×</button>\n            </span>`
+        ).join('');
+    } else {
+        activeFiltersDiv.innerHTML = '';
+    }
+}
+
+function clearAllFilters() {
+    // Clear all select filters
+    const locationFilter = document.getElementById('location-filter');
+    if (locationFilter) locationFilter.value = '';
+    
+    const salaryFilter = document.getElementById('salary-filter');
+    if (salaryFilter) salaryFilter.value = '';
+    
+    const companySizeFilter = document.getElementById('company-size-filter');
+    if (companySizeFilter) companySizeFilter.value = '';
+    
+    const postedFilter = document.getElementById('posted-filter');
+    if (postedFilter) postedFilter.value = '';
+    
+    const distanceFilter = document.getElementById('distance-filter');
+    if (distanceFilter) {
+        distanceFilter.value = '0';
+        const distanceValue = document.getElementById('distance-value');
+        if (distanceValue) distanceValue.textContent = 'Any';
+    }
+    
+    // Clear all checkboxes
+    document.querySelectorAll('.type-filter-checkbox').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.major-filter-checkbox').forEach(cb => cb.checked = false);
+    
+    // Clear search
+    if (searchInput) searchInput.value = '';
+    const searchLocation = document.getElementById('search-location');
+    if (searchLocation) searchLocation.value = '';
+    const searchType = document.getElementById('search-type');
+    if (searchType) searchType.value = '';
+    
+    // Clear active filters display
+    updateActiveFilters();
+    
+    // Show all opportunities
+    displayOpportunityCards(opportunities, 50, true);
+}
+
+function removeFilter(type, value) {
+    // Remove specific filter and reapply
+    // Implementation depends on filter type
+    // For simplicity, just reapply
+    applyEnhancedFilters();
+}
+
+function applyEnhancedFilters() {
     const locationValue = locationFilter ? locationFilter.value : '';
     const typeValue = typeFilter ? typeFilter.value : '';
     const majorValue = majorFilter ? majorFilter.value : '';

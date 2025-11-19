@@ -35,19 +35,28 @@
     <main>
         <!-- Hero Section -->
         <section id="home" class="hero">
+            <!-- Background Image -->
+            <div class="hero-bg"></div>
+            
             <div class="hero-content">
-                <h1>Discover Career Opportunities Near UNF</h1>
-                <p>Enhanced career platform connecting UNF students with opportunities, complete with location insights and detailed opportunity information</p>
+                <h1 class="hero-title">Find Your Next Opportunity</h1>
+                <p class="hero-subtitle">Jobs & Internships for UNF Students</p>
+                
+                <!-- Simplified Search -->
                 <div class="search-container">
-                    <input type="text" id="job-search" placeholder="Search for jobs, internships, companies...">
-                    <button id="search-btn"><i class="fas fa-search"></i></button>
+                    <input type="text" id="job-search" placeholder="Search jobs, companies, skills..." autocomplete="off">
+                    <button id="search-btn" class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div class="search-suggestions" id="search-suggestions"></div>
                 </div>
+                
+                <!-- Quick Filters -->
                 <div class="quick-filters">
-                    <button class="filter-btn" data-type="internship">Internships</button>
-                    <button class="filter-btn" data-type="entry-level">Entry Level</button>
-                    <button class="filter-btn" data-type="part-time">Part Time</button>
-                    <button class="filter-btn" data-type="remote">Remote</button>
-                    <button class="filter-btn" data-type="near-unf">Near UNF</button>
+                    <button class="quick-filter-btn" data-filter="internship">Internships</button>
+                    <button class="quick-filter-btn" data-filter="entry-level">Entry Level</button>
+                    <button class="quick-filter-btn" data-filter="near-unf">Near Campus</button>
+                    <button class="quick-filter-btn" data-filter="remote">Remote</button>
                 </div>
             </div>
         </section>
@@ -55,50 +64,298 @@
         <!-- Opportunities Section -->
         <section id="opportunities" class="opportunities-section">
             <div class="container">
-                <h2>Latest Opportunities</h2>
+                <h2>Job Opportunities</h2>
+                <!-- Filters Section -->
+                <div class="filters-header">
+                    <h3>Filters</h3>
+                    <button class="clear-filters-btn" id="clear-filters">Clear</button>
+                </div>
                 <div class="filters-container">
-                    <div class="filter-group">
-                        <label for="location-filter">Location:</label>
-                        <select id="location-filter">
-                            <option value="">All Locations</option>
-                            <option value="near-unf">Within 10 miles of UNF</option>
-                            <option value="jacksonville">Jacksonville, FL</option>
-                            <option value="florida">Florida</option>
-                            <option value="remote">Remote</option>
-                            <option value="nationwide">Nationwide</option>
-                        </select>
+                    <!-- Location Filters -->
+                    <div class="filter-section">
+                        <h4><i class="fas fa-map-marker-alt"></i> Location</h4>
+                        <div class="filter-options">
+                            <select id="location-filter" class="filter-select-enhanced">
+                                <option value="">All Locations</option>
+                                <option value="near-unf">Within 10 miles of UNF</option>
+                                <option value="jacksonville">Jacksonville, FL</option>
+                                <option value="florida">Florida</option>
+                                <option value="remote">Remote</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="nationwide">Nationwide</option>
+                            </select>
+                            <div class="distance-slider">
+                                <label>Distance from UNF: <span id="distance-value">Any</span></label>
+                                <input type="range" id="distance-filter" min="0" max="50" value="0" class="slider">
+                            </div>
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label for="type-filter">Type:</label>
-                        <select id="type-filter">
-                            <option value="">All Types</option>
-                            <option value="internship">Internship</option>
-                            <option value="entry-level">Entry Level</option>
-                            <option value="part-time">Part Time</option>
-                            <option value="full-time">Full Time</option>
-                        </select>
+                    
+                    <!-- Job Type Filters -->
+                    <div class="filter-section">
+                        <h4><i class="fas fa-briefcase"></i> Job Type</h4>
+                        <div class="filter-checkboxes">
+                            <label class="checkbox-container">
+                                <input type="checkbox" class="type-filter-checkbox" value="internship">
+                                <span class="checkmark"></span>
+                                Internship
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" class="type-filter-checkbox" value="entry-level">
+                                <span class="checkmark"></span>
+                                Entry Level
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" class="type-filter-checkbox" value="part-time">
+                                <span class="checkmark"></span>
+                                Part Time
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" class="type-filter-checkbox" value="full-time">
+                                <span class="checkmark"></span>
+                                Full Time
+                            </label>
+                            <label class="checkbox-container">
+                                <input type="checkbox" class="type-filter-checkbox" value="contract">
+                                <span class="checkmark"></span>
+                                Contract
+                            </label>
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label for="major-filter">Major:</label>
-                        <select id="major-filter">
-                            <option value="">All Majors</option>
-                            <option value="business">Business</option>
-                            <option value="engineering">Engineering</option>
-                            <option value="computer-science">Computer Science</option>
-                            <option value="education">Education</option>
-                            <option value="health-sciences">Health Sciences</option>
-                            <option value="arts">Arts & Letters</option>
-                        </select>
+                    
+                    <!-- Major/Field Filters -->
+                    <div class="filter-section">
+                        <h4><i class="fas fa-graduation-cap"></i> Major / Field</h4>
+                        <div class="major-accordion">
+                            <!-- Business Majors -->
+                            <div class="major-group">
+                                <button class="major-group-btn">Business <i class="fas fa-chevron-down"></i></button>
+                                <div class="major-group-content">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="accounting">
+                                        <span class="checkmark"></span>
+                                        Accounting
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="finance">
+                                        <span class="checkmark"></span>
+                                        Finance
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="marketing">
+                                        <span class="checkmark"></span>
+                                        Marketing
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="management">
+                                        <span class="checkmark"></span>
+                                        Management
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="international-business">
+                                        <span class="checkmark"></span>
+                                        International Business
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Engineering Majors -->
+                            <div class="major-group">
+                                <button class="major-group-btn">Engineering <i class="fas fa-chevron-down"></i></button>
+                                <div class="major-group-content">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="civil-engineering">
+                                        <span class="checkmark"></span>
+                                        Civil Engineering
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="electrical-engineering">
+                                        <span class="checkmark"></span>
+                                        Electrical Engineering
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="mechanical-engineering">
+                                        <span class="checkmark"></span>
+                                        Mechanical Engineering
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="computer-engineering">
+                                        <span class="checkmark"></span>
+                                        Computer Engineering
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Computer Science Majors -->
+                            <div class="major-group">
+                                <button class="major-group-btn">Computer Science <i class="fas fa-chevron-down"></i></button>
+                                <div class="major-group-content">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="computer-science">
+                                        <span class="checkmark"></span>
+                                        Computer Science
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="information-technology">
+                                        <span class="checkmark"></span>
+                                        Information Technology
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="cybersecurity">
+                                        <span class="checkmark"></span>
+                                        Cybersecurity
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="data-science">
+                                        <span class="checkmark"></span>
+                                        Data Science
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="software-engineering">
+                                        <span class="checkmark"></span>
+                                        Software Engineering
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Health Sciences Majors -->
+                            <div class="major-group">
+                                <button class="major-group-btn">Health Sciences <i class="fas fa-chevron-down"></i></button>
+                                <div class="major-group-content">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="nursing">
+                                        <span class="checkmark"></span>
+                                        Nursing
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="public-health">
+                                        <span class="checkmark"></span>
+                                        Public Health
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="health-administration">
+                                        <span class="checkmark"></span>
+                                        Health Administration
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="nutrition">
+                                        <span class="checkmark"></span>
+                                        Nutrition & Dietetics
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="physical-therapy">
+                                        <span class="checkmark"></span>
+                                        Physical Therapy
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Education Majors -->
+                            <div class="major-group">
+                                <button class="major-group-btn">Education <i class="fas fa-chevron-down"></i></button>
+                                <div class="major-group-content">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="elementary-education">
+                                        <span class="checkmark"></span>
+                                        Elementary Education
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="secondary-education">
+                                        <span class="checkmark"></span>
+                                        Secondary Education
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="special-education">
+                                        <span class="checkmark"></span>
+                                        Special Education
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="educational-leadership">
+                                        <span class="checkmark"></span>
+                                        Educational Leadership
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Arts & Sciences -->
+                            <div class="major-group">
+                                <button class="major-group-btn">Arts & Sciences <i class="fas fa-chevron-down"></i></button>
+                                <div class="major-group-content">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="psychology">
+                                        <span class="checkmark"></span>
+                                        Psychology
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="communications">
+                                        <span class="checkmark"></span>
+                                        Communications
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="biology">
+                                        <span class="checkmark"></span>
+                                        Biology
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="chemistry">
+                                        <span class="checkmark"></span>
+                                        Chemistry
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="english">
+                                        <span class="checkmark"></span>
+                                        English
+                                    </label>
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="major-filter-checkbox" value="graphic-design">
+                                        <span class="checkmark"></span>
+                                        Graphic Design
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label for="distance-filter">Distance from UNF:</label>
-                        <select id="distance-filter">
-                            <option value="">Any Distance</option>
-                            <option value="5">Within 5 miles</option>
-                            <option value="10">Within 10 miles</option>
-                            <option value="25">Within 25 miles</option>
-                            <option value="50">Within 50 miles</option>
-                        </select>
+                    
+                    <!-- Additional Filters -->
+                    <div class="filter-section">
+                        <h4><i class="fas fa-filter"></i> Additional Filters</h4>
+                        <div class="filter-options">
+                            <select id="salary-filter" class="filter-select-enhanced">
+                                <option value="">Any Salary</option>
+                                <option value="15-20">$15-20/hour</option>
+                                <option value="20-25">$20-25/hour</option>
+                                <option value="25-30">$25-30/hour</option>
+                                <option value="30+">$30+/hour</option>
+                                <option value="40k-50k">$40k-50k/year</option>
+                                <option value="50k-60k">$50k-60k/year</option>
+                                <option value="60k+">$60k+/year</option>
+                            </select>
+                            
+                            <select id="company-size-filter" class="filter-select-enhanced">
+                                <option value="">Any Company Size</option>
+                                <option value="startup">Startup (1-50)</option>
+                                <option value="small">Small (51-200)</option>
+                                <option value="medium">Medium (201-1000)</option>
+                                <option value="large">Large (1000+)</option>
+                            </select>
+                            
+                            <select id="posted-filter" class="filter-select-enhanced">
+                                <option value="">Any Time</option>
+                                <option value="24h">Last 24 hours</option>
+                                <option value="3d">Last 3 days</option>
+                                <option value="7d">Last 7 days</option>
+                                <option value="14d">Last 2 weeks</option>
+                                <option value="30d">Last month</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Apply Filters Button -->
+                    <div class="filter-actions">
+                        <button id="apply-filters-btn" class="apply-filters-btn">
+                            <i class="fas fa-check"></i> Apply Filters
+                        </button>
+                        <div class="active-filters" id="active-filters"></div>
                     </div>
                 </div>
                 <div class="results-header" id="results-header" style="display: none;">
@@ -238,26 +495,25 @@
         <!-- About Section -->
         <section id="about" class="about-section">
             <div class="container">
-                <h2>About UNF Career Hub V2</h2>
+                <h2>About UNF Career Hub</h2>
                 <div class="about-content">
-                    <p>The enhanced UNF Career Hub V2 provides University of North Florida students with location-aware career opportunities, featuring detailed company profiles, distance calculations from campus, and integrated Google Maps visualization.</p>
-                    <p>Our platform now includes enhanced features like detailed opportunity pages, location-based filtering, and proximity-based recommendations to help you find the perfect career opportunity near campus.</p>
+                    <p>Connecting UNF students with career opportunities in Jacksonville and beyond.</p>
                     <div class="stats">
                         <div class="stat">
                             <h3>750+</h3>
-                            <p>Active Job Listings</p>
+                            <p>Jobs</p>
                         </div>
                         <div class="stat">
                             <h3>85+</h3>
-                            <p>Partner Companies</p>
+                            <p>Companies</p>
                         </div>
                         <div class="stat">
                             <h3>2500+</h3>
-                            <p>Students Helped</p>
+                            <p>Placements</p>
                         </div>
                         <div class="stat">
                             <h3>15mi</h3>
-                            <p>Average Distance</p>
+                            <p>Avg Distance</p>
                         </div>
                     </div>
                 </div>
